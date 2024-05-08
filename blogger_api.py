@@ -32,5 +32,5 @@ class BloggerAPI:
             .execute() \
             .get('items')
         
-        return new_posts
+        return new_posts if new_posts else []
         
