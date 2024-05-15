@@ -3,7 +3,7 @@ import discord
 from discord.ext import tasks, commands
 from dotenv import load_dotenv
 from blogger_api import BloggerAPI
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 
 load_dotenv()
 
@@ -12,6 +12,7 @@ DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.all()
 bot = commands.Bot(intents=intents, command_prefix='/')
+CHANNEL_ID = os.getenv('CHANNEL_ID')
 
 # dictionary to store birthdays of members
 birthdays = {}
@@ -29,12 +30,17 @@ async def on_ready():
         status=discord.Status.online,
         activity=discord.CustomActivity("Waiting for new posts...")
     )
-    send_new_posts.start()
-    check_for_birthdays.start()
+
+    if not send_new_posts.is_running():
+        send_new_posts.start()
+    
+    if not check_for_birthdays.is_running():
+        check_for_birthdays.start()
+
 
 @tasks.loop(time=time(hour=0, minute=0), count=None)
 async def check_for_birthdays():
-    channel = bot.get_channel(os.getenv('CHANNEL_ID'))
+    channel = bot.get_channel(CHANNEL_ID)
 
     today = datetime.now()
     for user, bday in birthdays.items():
@@ -49,15 +55,15 @@ async def check_for_birthdays():
                 print('Failed to find channel with ID:')
 
 
-@tasks.loop(minutes=5, count=None)
+@tasks.loop(minutes=15, count=None)
 async def send_new_posts():
-    new_posts = api.get_new_posts()
+    channel = bot.get_channel(CHANNEL_ID)
+    new_posts = api.get_new_posts(timedelta=timedelta(minutes=15))
     for post in new_posts:
-        channel = bot.get_channel(os.getenv('CHANNEL_ID'))
         if channel:
             await channel.send(f"\n**{post['title']}**\n\n{post['url']}")
         else:
-            print('Failed to find channel with ID:')
+            print(f'Failed to find channel with ID: {channel}')
 
 
 @bot.command()

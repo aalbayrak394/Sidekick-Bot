@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.12-slim
 
 RUN mkdir -p /usr/src/bot
 WORKDIR /usr/src/bot

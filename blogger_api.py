@@ -17,15 +17,13 @@ class BloggerAPI:
         self.posts_resource = build('blogger', 'v3', developerKey=os.getenv('API_KEY'))
         self.processed_posts = set()
     
-    def get_new_posts(self) -> list[Any]:
+    def get_new_posts(self, timedelta) -> list[Any]:
         """ Returns a list with posts published in the last 5 minutes """
         current_time = datetime.now()
-        five_minutes_ago = current_time - timedelta(minutes=5)
+        five_minutes_ago = current_time - timedelta
         
-        # Convert timestamp to RFC3339 format for google apis
+        # Convert timestamp to RFC3339 format for google api
         start_date = five_minutes_ago.isoformat("T") + "Z"
-        # print(start_date)
-        # start_date = '2024-04-24T16:09:53+00:00'
 
         new_posts = self.posts_resource.posts() \
             .list(blogId=self.blog_id, startDate=start_date) \
